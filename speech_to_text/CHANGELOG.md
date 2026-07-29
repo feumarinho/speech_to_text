@@ -1,16 +1,11 @@
 # Changelog
 
-## Unreleased
+## 7.5.0-beta.1
 
-### New
-* `SpeechListenOptions.biasingStrings` biases recognition towards a caller
-  supplied list of expected terms. Applied on iOS/macOS through
-  `SFSpeechAudioBufferRecognitionRequest.contextualStrings` and on Android 13
-  (API 33) and later through `RecognizerIntent.EXTRA_BIASING_STRINGS`. Optional
-  and ignored where unsupported, omitting it leaves the existing behaviour and
-  the existing channel payload unchanged.
+- Updates minimum supported SDK version to Flutter 3.44/Dart 3.12.
+- Migrates to built-in Kotlin
 
-## 7.4.0-beta
+## 7.4.0
 
 ### New
 * Android now respects the pauseFor value
