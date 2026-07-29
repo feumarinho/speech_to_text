@@ -165,6 +165,9 @@ public class SpeechToTextPlugin: NSObject, FlutterPlugin {
       if let localeParam = argsArr["localeId"] as? String {
         localeStr = localeParam
       }
+      // Read separately from the guard above: the arg is optional, an older
+      // caller that never sends it must not fail the listen.
+      let biasingStrings = argsArr["biasingStrings"] as? [String]
       guard let listenMode = ListenMode(rawValue: listenModeIndex) else {
         DispatchQueue.main.async {
           result(
@@ -183,17 +186,18 @@ public class SpeechToTextPlugin: NSObject, FlutterPlugin {
             let capturedSampleRate = sampleRate
             let capturedAutoPunctuation = autoPunctuation
             let capturedEnableHaptics = enableHaptics
+            let capturedBiasingStrings = biasingStrings
             Task {
                 listenForSpeech(
                     result, localeStr: capturedLocaleStr, partialResults: capturedPartialResults, onDevice: capturedOnDevice,
                     listenMode: capturedListenMode, sampleRate: capturedSampleRate, autoPunctuation: capturedAutoPunctuation,
-                    enableHaptics: capturedEnableHaptics)
+                    enableHaptics: capturedEnableHaptics, biasingStrings: capturedBiasingStrings)
             }
         } else {
             listenForSpeech(
                 result, localeStr: localeStr, partialResults: partialResults, onDevice: onDevice,
                 listenMode: listenMode, sampleRate: sampleRate, autoPunctuation: autoPunctuation,
-                enableHaptics: enableHaptics)
+                enableHaptics: enableHaptics, biasingStrings: biasingStrings)
         }
     case SwiftSpeechToTextMethods.stop.rawValue:
         if #available(iOS 13.0, *) {
@@ -483,7 +487,7 @@ public class SpeechToTextPlugin: NSObject, FlutterPlugin {
   private func listenForSpeech(
     _ result: @escaping FlutterResult, localeStr: String?, partialResults: Bool,
     onDevice: Bool, listenMode: ListenMode, sampleRate: Int, autoPunctuation: Bool,
-    enableHaptics: Bool
+    enableHaptics: Bool, biasingStrings: [String]? = nil
   ) {
     if nil != currentTask || listening {
       sendBoolResult(false, result)
@@ -572,6 +576,9 @@ public class SpeechToTextPlugin: NSObject, FlutterPlugin {
       }
       if #available(iOS 16.0, macOS 13, *) {
         currentRequest.addsPunctuation = autoPunctuation
+      }
+      if let biasing = biasingStrings, !biasing.isEmpty {
+        currentRequest.contextualStrings = biasing
       }
       self.currentTask = self.recognizer?.recognitionTask(with: currentRequest, delegate: self)
       let recordingFormat = inputNode?.outputFormat(forBus: self.busForNodeTap)

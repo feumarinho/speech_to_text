@@ -67,6 +67,11 @@ class SpeechListenOptions {
   final Duration? listenFor;
   final String? localeId;
 
+  /// Terms the recognizer should favour, for vocabulary outside the common
+  /// lexicon (technical names, acronyms, jargon). Ignored where the platform
+  /// does not support it. Null or empty means current behaviour.
+  final List<String>? biasingStrings;
+
   SpeechListenOptions({
     /// If true the listen session will automatically be canceled on a permanent error.
     this.cancelOnError = false,
@@ -113,6 +118,15 @@ class SpeechListenOptions {
     /// The locale to use for the listen session, if null the system default
     /// locale will be used. This is only supported on iOS and Android.
     this.localeId = null,
+
+    /// Terms the recognizer should favour when recognizing speech. Use for
+    /// vocabulary that is unlikely to be in the recognizer's default lexicon,
+    /// such as technical names, acronyms or jargon. Supported on iOS/macOS
+    /// (`SFSpeechAudioBufferRecognitionRequest.contextualStrings`) and on
+    /// Android from API 33 (`RecognizerIntent.EXTRA_BIASING_STRINGS`).
+    /// Silently ignored elsewhere, and by recognition services that choose
+    /// not to honour the hint. Null or empty means current behaviour.
+    this.biasingStrings = null,
   });
 
   SpeechListenOptions copyWith({
@@ -126,6 +140,7 @@ class SpeechListenOptions {
     Duration? pauseFor,
     Duration? listenFor,
     String? localeId,
+    List<String>? biasingStrings,
   }) {
     return SpeechListenOptions(
         cancelOnError: cancelOnError ?? this.cancelOnError,
@@ -137,7 +152,8 @@ class SpeechListenOptions {
         enableHapticFeedback: enableHapticFeedback ?? this.enableHapticFeedback,
         pauseFor: pauseFor ?? this.pauseFor,
         listenFor: listenFor ?? this.listenFor,
-        localeId: localeId ?? this.localeId);
+        localeId: localeId ?? this.localeId,
+        biasingStrings: biasingStrings ?? this.biasingStrings);
   }
 }
 

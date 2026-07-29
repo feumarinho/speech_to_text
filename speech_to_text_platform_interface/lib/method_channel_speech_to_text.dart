@@ -117,6 +117,10 @@ class MethodChannelSpeechToText extends SpeechToTextPlatform {
     if (null != (localeId ?? options?.localeId)) {
       listenParams["localeId"] = (localeId ?? options?.localeId);
     }
+    final biasing = options?.biasingStrings;
+    if (biasing != null && biasing.isNotEmpty) {
+      listenParams["biasingStrings"] = biasing;
+    }
     return await _channel.invokeMethod<bool>('listen', listenParams) ?? false;
   }
 

@@ -398,6 +398,27 @@ void main() {
       expect(testPlatform.listenInvoked, true);
       expect(testPlatform.listenLocale, TestSpeechChannelHandler.localeId1);
     });
+    test('passes biasingStrings through to the platform', () async {
+      await speech.initialize();
+      await speech.listen(
+        listenOptions: SpeechListenOptions(biasingStrings: ['aorta', 'TAPSE']),
+      );
+      expect(testPlatform.listenOptions?.biasingStrings, ['aorta', 'TAPSE']);
+    });
+    test('retains biasingStrings when localeId is overridden', () async {
+      await speech.initialize();
+      await speech.listen(
+        localeId: TestSpeechChannelHandler.localeId1,
+        listenOptions: SpeechListenOptions(biasingStrings: ['PSAP']),
+      );
+      expect(testPlatform.listenLocale, TestSpeechChannelHandler.localeId1);
+      expect(testPlatform.listenOptions?.biasingStrings, ['PSAP']);
+    });
+    test('biasingStrings is null when no options are provided', () async {
+      await speech.initialize();
+      await speech.listen();
+      expect(testPlatform.listenOptions?.biasingStrings, isNull);
+    });
     test('calls speech listener', () async {
       await speech.initialize();
       await speech.listen(onResult: listener.onSpeechResult);

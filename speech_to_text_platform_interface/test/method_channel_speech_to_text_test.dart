@@ -120,6 +120,29 @@ void main() {
           isTrue);
       expect(channelHandler.sampleRate, 10000);
     });
+    test('passes biasingStrings parameter', () async {
+      expect(
+          await speechToText?.listen(
+            options: SpeechListenOptions(biasingStrings: ['aorta', 'TAPSE']),
+          ),
+          isTrue);
+      expect(channelHandler.listenArguments?['biasingStrings'],
+          ['aorta', 'TAPSE']);
+    });
+    test('omits biasingStrings when not provided', () async {
+      expect(await speechToText?.listen(options: SpeechListenOptions()), isTrue);
+      expect(channelHandler.listenArguments?.containsKey('biasingStrings'),
+          isFalse);
+    });
+    test('omits biasingStrings when empty', () async {
+      expect(
+          await speechToText?.listen(
+            options: SpeechListenOptions(biasingStrings: []),
+          ),
+          isTrue);
+      expect(channelHandler.listenArguments?.containsKey('biasingStrings'),
+          isFalse);
+    });
   });
   group('control methods invoked as expected', () {
     test('stop invoked', () async {

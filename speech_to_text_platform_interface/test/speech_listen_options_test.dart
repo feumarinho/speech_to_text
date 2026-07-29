@@ -12,6 +12,7 @@ void main() {
         cancelOnError: true,
         autoPunctuation: true,
         enableHapticFeedback: true,
+        biasingStrings: ['aorta'],
       );
       final modifiedOptions = options.copyWith(
         onDevice: false,
@@ -21,6 +22,7 @@ void main() {
         cancelOnError: false,
         autoPunctuation: false,
         enableHapticFeedback: false,
+        biasingStrings: ['TAPSE', 'PSAP'],
       );
       expect(modifiedOptions.onDevice, false);
       expect(modifiedOptions.partialResults, false);
@@ -29,6 +31,14 @@ void main() {
       expect(modifiedOptions.cancelOnError, false);
       expect(modifiedOptions.autoPunctuation, false);
       expect(modifiedOptions.enableHapticFeedback, false);
+      expect(modifiedOptions.biasingStrings, ['TAPSE', 'PSAP']);
+    });
+    test('retains biasingStrings when not overridden', () async {
+      final options = SpeechListenOptions(biasingStrings: ['aorta']);
+      expect(options.copyWith(onDevice: true).biasingStrings, ['aorta']);
+    });
+    test('defaults biasingStrings to null', () async {
+      expect(SpeechListenOptions().biasingStrings, isNull);
     });
   });
 }
