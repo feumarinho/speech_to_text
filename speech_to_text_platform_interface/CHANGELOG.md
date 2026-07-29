@@ -1,3 +1,8 @@
+## Unreleased
+- Added `biasingStrings` to `SpeechListenOptions`, a list of terms the
+  recognizer should favour. Sent on the `listen` channel call only when non
+  empty, so the payload is unchanged when the option is not used.
+
 ## 2.4.0
 - New properties on SpeechListenOptions for pauseFor, listenFor and localeId
 

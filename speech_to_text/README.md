@@ -312,6 +312,49 @@ property of any of the values returned in `locales`. A call looks like this:
        );
 ```
 
+### Biasing recognition towards expected terms
+
+Recognizers are trained on common speech and reliably mis-hear vocabulary that
+falls outside it — technical names, acronyms, jargon, proper nouns. Pass the
+terms you expect through `biasingStrings` on `SpeechListenOptions` and the
+recognizer will favour them:
+
+```dart
+   speech.listen(
+       onResult: resultListener,
+       listenOptions: SpeechListenOptions(
+         biasingStrings: ['aorta', 'TAPSE', 'PSAP', 'fração de ejeção'],
+       ),
+       );
+```
+
+Unlike post-processing a wrong transcription, this acts before recognition, so
+the engine is less likely to produce the wrong word in the first place.
+
+Support is per platform, and the option degrades silently where it is missing —
+there is no error, only no benefit:
+
+| Platform | Backing API | Notes |
+|---|---|---|
+| iOS / macOS | `SFSpeechAudioBufferRecognitionRequest.contextualStrings` | Always applied. |
+| Android | `RecognizerIntent.EXTRA_BIASING_STRINGS` | Added in API 33 (Android 13). Below that the extra is not sent. |
+| Web / Windows | — | Not supported, the option is ignored. |
+
+Notes:
+
+* Null or empty is the same as not setting it: the payload sent to the native
+  side is byte for byte what it was before this option existed.
+* On Android the extra is a hint to the recognition service. Services that do
+  not implement it ignore it, so treat any gain as measured rather than
+  guaranteed.
+* Keep the list to the terms you actually expect. Long lists dilute the bias
+  and can pull common words towards rare ones.
+* Android also defines `EXTRA_ENABLE_BIASING_DEVICE_CONTEXT`, which biases
+  towards on-device context such as contact names. It is deliberately not
+  enabled by this plugin: it is unrelated to caller supplied vocabulary, it
+  varies per device, and it has privacy implications. It is also documented to
+  have no effect when `EXTRA_AUDIO_SOURCE` is set.
+
 ## Troubleshooting
 
 ### Speech recognition not working on iOS Simulator

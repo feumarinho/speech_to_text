@@ -19,6 +19,10 @@ class TestSpeechToTextPlatform extends SpeechToTextPlatform {
   bool listenException = false;
   String listeningStatusResponse = SpeechToText.listeningStatus;
   String? listenLocale;
+
+  /// The options of the last `listen` call, so tests can assert that
+  /// [SpeechToText.listen] passes them through unchanged.
+  SpeechListenOptions? listenOptions;
   List<String> localesResult = [];
   static const String localeId1 = 'en_US';
   static const String localeId2 = 'fr_CA';
@@ -87,6 +91,7 @@ class TestSpeechToTextPlatform extends SpeechToTextPlatform {
       SpeechListenOptions? options}) async {
     listenInvoked = true;
     listenLocale = localeId;
+    listenOptions = options;
     if (listenException) {
       throw PlatformException(
           code: listenExceptionCode,

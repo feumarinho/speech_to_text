@@ -127,6 +127,7 @@ public class SpeechToTextPlugin :
     private var previousPartialResults: Boolean = true
     private var previousListenMode: ListenMode = ListenMode.deviceDefault
     private var previousPauseFor: Int? = null
+    private var previousBiasingStrings: List<String>? = null
     private var lastFinalTime: Long = 0
     private var speechStartTime: Long = 0
     private var minRms: Float = 1000.0F
@@ -217,7 +218,9 @@ public class SpeechToTextPlugin :
                     }
                     val pauseFor =
                         call.argument<Int?>("pauseFor")
-                    startListening(result, localeId, partialResults, listenModeIndex, onDevice, pauseFor )
+                    val biasingStrings = call.argument<List<String>>("biasingStrings")
+                    startListening(result, localeId, partialResults, listenModeIndex, onDevice, pauseFor,
+                            biasingStrings )
                 }
                 "stop" -> stopListening(result)
                 "cancel" -> cancelListening(result)
@@ -281,7 +284,8 @@ public class SpeechToTextPlugin :
     }
 
     private fun startListening(result: Result, languageTag: String, partialResults: Boolean,
-                               listenModeIndex: Int, onDevice: Boolean, pauseFor: Int?) {
+                               listenModeIndex: Int, onDevice: Boolean, pauseFor: Int?,
+                               biasingStrings: List<String>? = null) {
         if (sdkVersionTooLow() || isNotInitialized() || isListening()) {
             result.success(false)
             return
@@ -289,13 +293,14 @@ public class SpeechToTextPlugin :
         var listenMode = enumValues<ListenMode>()[listenModeIndex]
 
         resultSent = false
-        createRecognizer(onDevice, listenMode, pauseFor)
+        createRecognizer(onDevice, listenMode, pauseFor, biasingStrings)
         minRms = 1000.0F
         maxRms = -100.0F
         debugLog("Start listening")
 
         optionallyStartBluetooth()
-        setupRecognizerIntent(languageTag, partialResults, listenMode, onDevice, pauseFor )
+        setupRecognizerIntent(languageTag, partialResults, listenMode, onDevice, pauseFor,
+                biasingStrings )
         handler.post {
             run {
                 speechRecognizer?.startListening(recognizerIntent)
@@ -600,7 +605,8 @@ public class SpeechToTextPlugin :
         return list.firstOrNull()?.serviceInfo?.let { ComponentName(it.packageName, it.name) }
     }
 
-    private fun createRecognizer(onDevice: Boolean, listenMode: ListenMode, pauseFor: Int?) {
+    private fun createRecognizer(onDevice: Boolean, listenMode: ListenMode, pauseFor: Int?,
+                                 biasingStrings: List<String>? = null) {
         if ( null != speechRecognizer && onDevice == lastOnDevice ) {
             return
         }
@@ -647,20 +653,21 @@ public class SpeechToTextPlugin :
             }
         }
         debugLog("before setup intent")
-        setupRecognizerIntent(defaultLanguageTag, true, listenMode, false, pauseFor )
+        setupRecognizerIntent(defaultLanguageTag, true, listenMode, false, pauseFor, biasingStrings )
         debugLog("after setup intent")
     }
 
-    private fun setupRecognizerIntent(languageTag: String, partialResults: Boolean, listenMode: ListenMode, onDevice: Boolean, pauseFor: Int? ) {
+    private fun setupRecognizerIntent(languageTag: String, partialResults: Boolean, listenMode: ListenMode, onDevice: Boolean, pauseFor: Int?, biasingStrings: List<String>? = null ) {
         debugLog("setupRecognizerIntent")
         if (previousRecognizerLang == null ||
                 previousRecognizerLang != languageTag ||
                 partialResults != previousPartialResults || previousListenMode != listenMode ||
-                previousPauseFor != pauseFor ) {
+                previousPauseFor != pauseFor || previousBiasingStrings != biasingStrings ) {
             previousRecognizerLang = languageTag;
             previousPartialResults = partialResults
             previousListenMode = listenMode
             previousPauseFor = pauseFor
+            previousBiasingStrings = biasingStrings
             handler.post {
                 run {
                     recognizerIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
@@ -691,6 +698,16 @@ public class SpeechToTextPlugin :
 
                         pauseFor?.also {
                             putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, it)
+                        }
+
+                        // EXTRA_BIASING_STRINGS was added in API 33 (Android 13). Below that
+                        // the extra is simply not added, recognition is unchanged. Above it,
+                        // a recognition service that does not honour the hint ignores it.
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                                !biasingStrings.isNullOrEmpty()) {
+                            putStringArrayListExtra(RecognizerIntent.EXTRA_BIASING_STRINGS,
+                                    ArrayList(biasingStrings))
+                            debugLog("put biasing strings")
                         }
                     }
                 }

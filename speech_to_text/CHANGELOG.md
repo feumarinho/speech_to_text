@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### New
+* `SpeechListenOptions.biasingStrings` biases recognition towards a caller
+  supplied list of expected terms. Applied on iOS/macOS through
+  `SFSpeechAudioBufferRecognitionRequest.contextualStrings` and on Android 13
+  (API 33) and later through `RecognizerIntent.EXTRA_BIASING_STRINGS`. Optional
+  and ignored where unsupported, omitting it leaves the existing behaviour and
+  the existing channel payload unchanged.
+
 ## 7.4.0-beta
 
 ### New

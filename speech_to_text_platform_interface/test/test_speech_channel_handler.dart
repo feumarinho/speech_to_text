@@ -31,6 +31,10 @@ class TestSpeechChannelHandler {
   int? listenMode = 0;
   int? sampleRate = 0;
   dynamic initOption;
+
+  /// The full argument map of the last `listen` call, so tests can assert on
+  /// keys being absent as well as on their values.
+  Map<dynamic, dynamic>? listenArguments;
   static const String localeId1 = 'en_US';
   static const String localeId2 = 'fr_CA';
   static const String name1 = 'English US';
@@ -91,6 +95,7 @@ class TestSpeechChannelHandler {
               message: listenExceptionMessage,
               details: listenExceptionDetails);
         }
+        listenArguments = methodCall.arguments as Map<dynamic, dynamic>;
         listenLocale = methodCall.arguments['localeId'];
         onDevice = methodCall.arguments['onDevice'];
         partialResults = methodCall.arguments['partialResults'];
@@ -152,6 +157,7 @@ class TestSpeechChannelHandler {
     sampleRate = 0;
     initOption = null;
     debugLogging = null;
+    listenArguments = null;
   }
 
   void setupLocales() {
